@@ -197,7 +197,7 @@
     Bitfinex.prototype.order_status = function(order_id, cb) {
       var params;
       params = {
-        order_id: order_id
+        order_id: parseInt(order_id)
       };
       return this.make_request('order/status', params, cb);
     };

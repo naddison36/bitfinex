@@ -194,7 +194,7 @@ module.exports = class Bitfinex
 	order_status: (order_id, cb) ->
 
 		params = 
-			order_id: order_id
+			order_id: parseInt(order_id)
 
 		@make_request('order/status', params, cb)  
 
@@ -229,15 +229,15 @@ module.exports = class Bitfinex
 
 	cancel_offer: (offer_id, cb) ->
 
-		params = 
-			order_id: offer_id
+		params =
+      offer_id: parseInt(offer_id)
 
 		@make_request('offer/cancel', params, cb) 
 
-	offer_status: (order_id, cb) ->
+	offer_status: (offer_id, cb) ->
 
-		params = 
-			order_id: order_id
+		params =
+      offer_id: parseInt(offer_id)
 
 		@make_request('offer/status', params, cb) 
 

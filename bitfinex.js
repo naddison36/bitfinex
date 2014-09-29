@@ -207,7 +207,7 @@
     Bitfinex.prototype.order_status = function(order_id, cb) {
       var params;
       params = {
-        order_id: order_id
+        order_id: parseInt(order_id)
       };
       return this.make_request('order/status', params, cb);
     };
@@ -246,15 +246,15 @@
     Bitfinex.prototype.cancel_offer = function(offer_id, cb) {
       var params;
       params = {
-        order_id: offer_id
+        offer_id: parseInt(offer_id)
       };
       return this.make_request('offer/cancel', params, cb);
     };
 
-    Bitfinex.prototype.offer_status = function(order_id, cb) {
+    Bitfinex.prototype.offer_status = function(offer_id, cb) {
       var params;
       params = {
-        order_id: order_id
+        offer_id: parseInt(offer_id)
       };
       return this.make_request('offer/status', params, cb);
     };

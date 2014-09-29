@@ -5,6 +5,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
 request = require 'request'
 crypto = require 'crypto'
 qs = require 'querystring'
+verror = require 'verror'
 
 module.exports = class Bitfinex
 
@@ -45,37 +46,51 @@ module.exports = class Bitfinex
 
 		request { url: url, method: "POST", headers: headers, timeout: 15000 }, (err,response,body)->
 		    
-            if err || (response.statusCode != 200 && response.statusCode != 400)
-                return cb new Error(err ? response.statusCode)
-                
-            try
-                result = JSON.parse(body)
-            catch error
-                return cb(null, { messsage : body.toString() } )
-            
-            if result.message?
-                return cb new Error(result.message)
+      if err
+          return cb new verror(err, 'failed post request to url %s with nonce %s', url, nonce)
 
-            cb null, result
-    
+      else if response.statusCode != 200 && response.statusCode != 400
+          error = new verror('failed post request to url %s with nonce %s. Response status code: %s', url, nonce, response.statusCode)
+          error.name = response.statusCode
+          return cb error
+
+      try
+          result = JSON.parse(body)
+      catch err
+          return cb new verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString() )
+
+      if result.message?
+          error = new verror('failed post request to url %s with nonce %s. Message: %s', url, nonce, result.message)
+          error.name = result.message
+          return cb error
+
+      cb null, result
+
 	make_public_request: (path, cb) ->
 
-		url = @url + '/v1/' + path	
+		url = @url + '/v1/' + path
 
 		request { url: url, method: "GET", timeout: 15000}, (err,response,body)->
-		    
-		    if err || (response.statusCode != 200 && response.statusCode != 400)
-                return cb new Error(err ? response.statusCode)
-            
-            try
-                result = JSON.parse(body)
-            catch error
-                return cb(null, { messsage : body.toString() } )
 
-            if result.message?
-                return cb new Error(result.message)
-            
-            cb null, result
+      if err
+        return cb new verror(err, 'failed post request to url %s', url)
+
+      else if response.statusCode != 200 && response.statusCode != 400
+        error = new verror('failed post request to url %s. Response status code: %s', url, response.statusCode)
+        error.name = response.statusCode
+        return cb error
+
+      try
+          result = JSON.parse(body)
+      catch err
+        return cb new verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString() )
+
+      if result.message?
+        error = new verror('failed post request to url %s. Message: %s', url, result.message)
+        error.name = result.message
+        return cb error
+
+      cb null, result
     
 	#####################################
 	########## PUBLIC REQUESTS ##########

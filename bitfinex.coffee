@@ -4,7 +4,6 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"
 
 request = require 'request'
 crypto = require 'crypto'
-qs = require 'querystring'
 verror = require 'verror'
 
 module.exports = class Bitfinex
@@ -70,7 +69,7 @@ module.exports = class Bitfinex
 
 		url = @url + '/v1/' + path
 
-		request { url: url, method: "GET", timeout: 15000}, (err,response,body)->
+		request { url: url, method: "GET", timeout: 20000}, (err,response,body)->
 
       if err
         return cb new verror(err, 'failed post request to url %s', url)
@@ -98,7 +97,7 @@ module.exports = class Bitfinex
 
 	ticker: (symbol, cb) ->
 
-		@make_public_request('ticker/' + symbol, cb)
+		@make_public_request('pubticker/' + symbol, cb)
 
 	today: (symbol, cb) ->
 
@@ -114,7 +113,7 @@ module.exports = class Bitfinex
 
 	orderbook: (symbol, cb) ->
 
-        maxOrders = 50
+        maxOrders = 100
         uri = 'book/' + symbol + '/?limit_bids=' + maxOrders + '&limit_asks=' + maxOrders
         @make_public_request(uri, cb)
     

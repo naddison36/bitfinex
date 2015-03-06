@@ -128,8 +128,9 @@
       return this.make_public_request(uri, cb);
     };
 
-    Bitfinex.prototype.trades = function(symbol, cb) {
-      return this.make_public_request('trades/' + symbol, cb);
+    Bitfinex.prototype.trades = function(symbol, numTrades, cb) {
+      numTrades = numTrades || 1000;
+      return this.make_public_request('trades/' + symbol + '/?limit_trades=' + numTrades, cb);
     };
 
     Bitfinex.prototype.lends = function(currency, cb) {

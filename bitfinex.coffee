@@ -113,13 +113,14 @@ module.exports = class Bitfinex
 
 	orderbook: (symbol, cb) ->
 
-        maxOrders = 100
-        uri = 'book/' + symbol + '/?limit_bids=' + maxOrders + '&limit_asks=' + maxOrders
-        @make_public_request(uri, cb)
+    maxOrders = 100
+    uri = 'book/' + symbol + '/?limit_bids=' + maxOrders + '&limit_asks=' + maxOrders
+    @make_public_request(uri, cb)
     
-	trades: (symbol, cb) ->
+	trades: (symbol, numTrades, cb) ->
 
-		@make_public_request('trades/' + symbol, cb)
+    numTrades = numTrades || 1000
+    @make_public_request('trades/' + symbol + '/?limit_trades=' + numTrades, cb)
 
 	lends: (currency, cb) ->
 

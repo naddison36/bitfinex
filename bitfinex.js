@@ -11,11 +11,12 @@
   verror = require('verror');
 
   module.exports = Bitfinex = (function() {
-    function Bitfinex(key, secret) {
+    function Bitfinex(key, secret, timeout) {
       this.url = "https://api.bitfinex.com";
       this.key = key;
       this.secret = secret;
       this.nonce = Math.round((new Date()).getTime() / 1000);
+      this.timeout = timeout || 20000;
     }
 
     Bitfinex.prototype._nonce = function() {
@@ -49,11 +50,13 @@
         url: url,
         method: "POST",
         headers: headers,
-        timeout: 15000
+        timeout: this.timeout
       }, function(err, response, body) {
         var error, result;
         if (err) {
-          return cb(new verror(err, 'failed post request to url %s with nonce %s', url, nonce));
+          error = new verror(err, 'failed post request to url %s with nonce %s', url, nonce);
+          error.name = err.code;
+          return cb(error);
         } else if (response.statusCode !== 200 && response.statusCode !== 400) {
           error = new verror('failed post request to url %s with nonce %s. Response status code: %s', url, nonce, response.statusCode);
           error.name = response.statusCode;
@@ -63,7 +66,9 @@
           result = JSON.parse(body);
         } catch (_error) {
           err = _error;
-          return cb(new verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString()));
+          error = verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString());
+          error.name = err.message;
+          return cb(error);
         }
         if (result.message != null) {
           error = new verror('failed post request to url %s with nonce %s. Message: %s', url, nonce, result.message);
@@ -74,17 +79,20 @@
       });
     };
 
-    Bitfinex.prototype.make_public_request = function(path, cb) {
+    Bitfinex.prototype.make_public_request = function(path, params, cb) {
       var url;
       url = this.url + '/v1/' + path;
       return request({
         url: url,
         method: "GET",
-        timeout: 20000
+        timeout: this.timeout,
+        qs: params
       }, function(err, response, body) {
         var error, result;
         if (err) {
-          return cb(new verror(err, 'failed post request to url %s', url));
+          error = new verror(err, 'failed post request to url %s', url);
+          error.name = err.code;
+          return cb(error);
         } else if (response.statusCode !== 200 && response.statusCode !== 400) {
           error = new verror('failed post request to url %s. Response status code: %s', url, response.statusCode);
           error.name = response.statusCode;
@@ -94,7 +102,9 @@
           result = JSON.parse(body);
         } catch (_error) {
           err = _error;
-          return cb(new verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString()));
+          error = new verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString());
+          error.name = err.message;
+          return cb(error);
         }
         if (result.message != null) {
           error = new verror('failed post request to url %s. Message: %s', url, result.message);
@@ -106,39 +116,44 @@
     };
 
     Bitfinex.prototype.ticker = function(symbol, cb) {
-      return this.make_public_request('pubticker/' + symbol, cb);
+      return this.make_public_request('pubticker/' + symbol, {}, cb);
     };
 
     Bitfinex.prototype.today = function(symbol, cb) {
-      return this.make_public_request('today/' + symbol, cb);
+      return this.make_public_request('today/' + symbol, {}, cb);
     };
 
     Bitfinex.prototype.candles = function(symbol, cb) {
-      return this.make_public_request('candles/' + symbol, cb);
+      return this.make_public_request('candles/' + symbol, {}, cb);
     };
 
     Bitfinex.prototype.lendbook = function(currency, cb) {
-      return this.make_public_request('lendbook/' + currency, cb);
+      return this.make_public_request('lendbook/' + currency, {}, cb);
     };
 
     Bitfinex.prototype.orderbook = function(symbol, cb) {
       var maxOrders, uri;
       maxOrders = 100;
-      uri = 'book/' + symbol + '/?limit_bids=' + maxOrders + '&limit_asks=' + maxOrders;
-      return this.make_public_request(uri, cb);
+      uri = 'book/' + symbol;
+      return this.make_public_request(uri, {
+        limit_bids: maxOrders,
+        limit_asks: maxOrders
+      }, cb);
     };
 
-    Bitfinex.prototype.trades = function(symbol, numTrades, cb) {
-      numTrades = numTrades || 1000;
-      return this.make_public_request('trades/' + symbol + '/?limit_trades=' + numTrades, cb);
+    Bitfinex.prototype.trades = function(symbol, params, cb) {
+      if (!params) {
+        params = {};
+      }
+      return this.make_public_request('trades/' + symbol, params, cb);
     };
 
     Bitfinex.prototype.lends = function(currency, cb) {
-      return this.make_public_request('lends/' + currency, cb);
+      return this.make_public_request('lends/' + currency, {}, cb);
     };
 
     Bitfinex.prototype.get_symbols = function(cb) {
-      return this.make_public_request('symbols/', cb);
+      return this.make_public_request('symbols/', {}, cb);
     };
 
     Bitfinex.prototype.new_order = function(symbol, amount, price, exchange, side, type, cb) {

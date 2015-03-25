@@ -8,12 +8,13 @@ verror = require 'verror'
 
 module.exports = class Bitfinex
 
-	constructor: (key, secret) ->
+	constructor: (key, secret, timeout) ->
 
 		@url = "https://api.bitfinex.com"
 		@key = key
 		@secret = secret
 		@nonce = Math.round((new Date()).getTime() / 1000)
+		@timeout = timeout || 20000
 
 	_nonce: () ->
 
@@ -43,10 +44,12 @@ module.exports = class Bitfinex
 			'X-BFX-PAYLOAD': payload
 			'X-BFX-SIGNATURE': signature
 
-		request { url: url, method: "POST", headers: headers, timeout: 15000 }, (err,response,body)->
+		request { url: url, method: "POST", headers: headers, timeout: @timeout }, (err,response,body)->
 		    
       if err
-          return cb new verror(err, 'failed post request to url %s with nonce %s', url, nonce)
+          error = new verror(err, 'failed post request to url %s with nonce %s', url, nonce)
+          error.name = err.code
+          return cb error
 
       else if response.statusCode != 200 && response.statusCode != 400
           error = new verror('failed post request to url %s with nonce %s. Response status code: %s', url, nonce, response.statusCode)
@@ -56,7 +59,9 @@ module.exports = class Bitfinex
       try
           result = JSON.parse(body)
       catch err
-          return cb new verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString() )
+          error = verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString() )
+          error.name = err.message
+          return cb error
 
       if result.message?
           error = new verror('failed post request to url %s with nonce %s. Message: %s', url, nonce, result.message)
@@ -65,14 +70,16 @@ module.exports = class Bitfinex
 
       cb null, result
 
-	make_public_request: (path, cb) ->
+	make_public_request: (path, params, cb) ->
 
 		url = @url + '/v1/' + path
 
-		request { url: url, method: "GET", timeout: 20000}, (err,response,body)->
+		request { url: url, method: "GET", timeout: @timeout, qs: params}, (err,response,body)->
 
       if err
-        return cb new verror(err, 'failed post request to url %s', url)
+        error = new verror(err, 'failed post request to url %s', url)
+        error.name = err.code
+        return cb error
 
       else if response.statusCode != 200 && response.statusCode != 400
         error = new verror('failed post request to url %s. Response status code: %s', url, response.statusCode)
@@ -82,7 +89,9 @@ module.exports = class Bitfinex
       try
           result = JSON.parse(body)
       catch err
-        return cb new verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString() )
+        error = new verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString() )
+        error.name = err.message
+        return cb error
 
       if result.message?
         error = new verror('failed post request to url %s. Message: %s', url, result.message)
@@ -97,38 +106,40 @@ module.exports = class Bitfinex
 
 	ticker: (symbol, cb) ->
 
-		@make_public_request('pubticker/' + symbol, cb)
+		@make_public_request('pubticker/' + symbol, {}, cb)
 
 	today: (symbol, cb) ->
 
-		@make_public_request('today/' + symbol, cb)		
+		@make_public_request('today/' + symbol, {}, cb)
 
 	candles: (symbol, cb) ->
 
-		@make_public_request('candles/' + symbol, cb)	
+		@make_public_request('candles/' + symbol, {}, cb)
 
 	lendbook: (currency, cb) ->
 
-		@make_public_request('lendbook/' + currency, cb)	
+		@make_public_request('lendbook/' + currency, {}, cb)
 
 	orderbook: (symbol, cb) ->
 
     maxOrders = 100
-    uri = 'book/' + symbol + '/?limit_bids=' + maxOrders + '&limit_asks=' + maxOrders
-    @make_public_request(uri, cb)
+    uri = 'book/' + symbol
+    @make_public_request(uri, {limit_bids: maxOrders, limit_asks: maxOrders}, cb)
     
-	trades: (symbol, numTrades, cb) ->
+	trades: (symbol, params, cb) ->
 
-    numTrades = numTrades || 1000
-    @make_public_request('trades/' + symbol + '/?limit_trades=' + numTrades, cb)
+    if !params
+      params = {}
+
+    @make_public_request('trades/' + symbol, params, cb)
 
 	lends: (currency, cb) ->
 
-		@make_public_request('lends/' + currency, cb)		
+		@make_public_request('lends/' + currency, {}, cb)
 
 	get_symbols: (cb) ->
 
-		@make_public_request('symbols/', cb)
+		@make_public_request('symbols/', {}, cb)
 
 	# #####################################
 	# ###### AUTHENTICATED REQUESTS #######

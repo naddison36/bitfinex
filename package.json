@@ -1,6 +1,6 @@
 {
   "name": "bitfinex",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "gypfile": true,
   "scripts": {
     "start": "node test.js"
@@ -23,7 +23,7 @@
     "email": "garf11235813@gmail.com"},
   "contributors": "Nick Addison",
   "dependencies": {
-    "request": "~2.53.0",
+    "request": "~2.54.0",
     "crypto": "~0.0.3",
     "verror": "~1.6.0"
   },

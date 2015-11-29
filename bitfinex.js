@@ -234,11 +234,12 @@
       return this.make_request('positions', {}, cb);
     };
 
-    Bitfinex.prototype.past_trades = function(symbol, timestamp, limit_trades, cb) {
+    Bitfinex.prototype.past_trades = function(symbol, fromDate, toDate, limit_trades, cb) {
       var params;
       params = {
         symbol: symbol,
-        timestamp: timestamp,
+        timestamp: fromDate,
+        until: toDate,
         limit_trades: limit_trades
       };
       return this.make_request('mytrades', params, cb);
@@ -290,3 +291,5 @@
   })();
 
 }).call(this);
+
+//# sourceMappingURL=bitfinex.js.map

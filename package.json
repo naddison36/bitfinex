@@ -1,6 +1,6 @@
 {
   "name": "bitfinex",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "gypfile": true,
   "description": "node.js wrapper for bitfinex cryptocurrency exchange",
   "main": "bitfinex.js",
@@ -20,7 +20,7 @@
     "email": "garf11235813@gmail.com"},
   "contributors": "Nick Addison",
   "dependencies": {
-    "request": "~2.64.0",
+    "request": "~2.67.0",
     "crypto": "~0.0.3",
     "verror": "~1.6.0"
   },

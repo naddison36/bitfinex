@@ -225,7 +225,17 @@ module.exports = class Bitfinex
 			until: toDate
 			limit_trades: limit_trades
 
-		@make_request('mytrades', params, cb)  
+		@make_request('mytrades', params, cb)
+
+	movements: (currency, fromDate, toDate, limit, cb) ->
+
+		params =
+			currency: currency
+			since: fromDate
+			until: toDate
+			limit: limit
+
+		@make_request('history/movements', params, cb)
 
 	new_offer: (currency, amount, rate, period, direction, insurance_option, cb) ->
 

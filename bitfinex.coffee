@@ -36,39 +36,34 @@ module.exports = class Bitfinex
 		for key, value of params
 			payload[key] = value
 
-		payload = new Buffer(JSON.stringify(payload)).toString('base64')
-		signature = crypto.createHmac("sha384", @secret).update(payload).digest('hex')
+		base64Payload = new Buffer(JSON.stringify(payload)).toString('base64')
+		signature = crypto.createHmac("sha384", @secret).update(base64Payload).digest('hex')
 
 		headers = 
 			'X-BFX-APIKEY': @key
-			'X-BFX-PAYLOAD': payload
+			'X-BFX-PAYLOAD': base64Payload
 			'X-BFX-SIGNATURE': signature
 
 		request { url: url, method: "POST", headers: headers, timeout: @timeout }, (err,response,body)->
-		    
-      if err
-          error = new verror(err, 'failed post request to url %s with nonce %s', url, nonce)
-          error.name = err.code
-          return cb error
 
-      else if response.statusCode != 200 && response.statusCode != 400
-          error = new verror('failed post request to url %s with nonce %s. Response status code: %s', url, nonce, response.statusCode)
-          error.name = response.statusCode
-          return cb error
+			if err
+				error = new verror(err, 'failed post request to url %s with payload %s.', url, JSON.stringify(payload))
+				error.name = err.code
+				return cb error
 
-      try
-          result = JSON.parse(body)
-      catch err
-          error = verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString() )
-          error.name = err.message
-          return cb error
+			try
+        result = JSON.parse(body)
+			catch err
+				error = new verror('failed post request to url %s with payload %s. HTTP status code: %s.', url, JSON.stringify(payload), response.statusCode)
+				error.name = response.statusCode
+				return cb error
 
-      if result.message?
-          error = new verror('failed post request to url %s with nonce %s. Message: %s', url, nonce, result.message)
-          error.name = result.message
-          return cb error
+			if result.message
+				error = new verror('failed post request to url %s with payload %s. Message: %s', url, payload, result.message)
+				error.name = result.message
+				return cb error
 
-      cb null, result
+			cb null, result
 
 	make_public_request: (path, params, cb) ->
 
@@ -82,14 +77,14 @@ module.exports = class Bitfinex
         return cb error
 
       else if response.statusCode != 200 && response.statusCode != 400
-        error = new verror('failed post request to url %s. Response status code: %s', url, response.statusCode)
+        error = new verror('failed post request to url %s with params %s. Response status code: %s', url, JSON.stringify(params), response.statusCode)
         error.name = response.statusCode
         return cb error
 
       try
           result = JSON.parse(body)
       catch err
-        error = new verror(err, 'failed to parse response body from url %s. Body: %s', url, body.toString() )
+        error = new verror(err, 'failed to parse response body from url %s with params %s. Body: %s', url, JSON.stringify(params), body.toString() )
         error.name = err.message
         return cb error
 

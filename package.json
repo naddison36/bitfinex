@@ -1,6 +1,6 @@
 {
   "name": "bitfinex",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "gypfile": true,
   "description": "node.js wrapper for bitfinex cryptocurrency exchange",
   "main": "bitfinex.js",

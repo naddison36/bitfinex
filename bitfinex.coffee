@@ -222,6 +222,17 @@ module.exports = class Bitfinex
 
 		@make_request('mytrades', params, cb)
 
+	history: (currency, fromDate, toDate, limit, wallet, cb) ->
+
+		params =
+			currency: currency
+			since: fromDate
+			until: toDate
+			limit: limit
+			wallet: wallet
+
+		@make_request('history', params, cb)
+
 	movements: (currency, fromDate, toDate, limit, cb) ->
 
 		params =
